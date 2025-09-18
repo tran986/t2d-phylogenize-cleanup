@@ -58,7 +58,13 @@ colnames(ashSrr_res)[c(1, 2)] <- c("taxon", "gene")
 merge_cond_ash=inner_join(ash2_res, ashSrr_res, by = c("taxon", "gene"))
 merge_cond_ash_split=split(merge_cond_ash, merge_cond_ash$taxon)
 
-
+merge_cond_scatter_ash=lapply(merge_cond_ash_split, function(t) 
+  ggplot(t, aes(x = PosteriorMean.x, y = PosteriorMean.y)) +
+  geom_point(color = "blue", size = 1.3) +
+  labs(title = "effect size",
+       x = "t2d_2",
+       y = "t2d_srr") +
+  theme_minimal())
 
 #===combine later with fixed effect:
 
