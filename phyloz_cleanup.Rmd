@@ -1,0 +1,38 @@
+---
+title: "phylogenize_t2d"
+output: html_document
+date: "2025-09-17"
+---
+
+```{r setup, include=FALSE}
+#------------------------------which approach is better?
+
+#==============================APPROACH 1 -- combine result after running phylogenize:
+#input:
+count_2_t2d <- read.delim("~/Desktop/t2d_phylogenize_cleanup/count_2_t2d.tab") %>% rename("X"="species_id")
+count_5_t2d <- read.delim("~/Desktop/t2d_phylogenize_cleanup/count_5_t2d_new.tab") %>% rename("X"="species_id")
+count_srr_t2d <- read.delim("~/Desktop/t2d_phylogenize_cleanup/count_srr_t2d.tab") %>% rename("X"="species_id")
+
+#metadata for each of the dataset:
+md_2_t2d=read.delim("~/Desktop/t2d_phylogenize_cleanup/md_2_t2d.tab")
+md_5_t2d=read.delim("~/Desktop/t2d_phylogenize_cleanup/md_5_t2d_fixed.tab")
+md_srr_t2d=read.delim("~/Desktop/t2d_phylogenize_cleanup/md_srr_t2d.tab")
+
+#phylogenize outputs for each dataset:
+#---t2d cond:--all-results
+phyloz_cond_2=read.csv("~/Desktop/t2d_phylogenize_cleanup/phyloz_outs/all-results-t2d-2-cond.csv") %>% select(-X)
+phyloz_cond_srr=read.csv("~/Desktop/t2d_phylogenize_cleanup/phyloz_outs/all-results-t2d-srr-cond.csv") %>% select(-X)
+
+#---met cond:
+phyloz_met_5=read.csv("~/Desktop/t2d_phylogenize_cleanup/phyloz_outs/all-results-t2d-5-met.csv")
+
+#combine later:
+#for each taxon, and for genes in those taxon that are overlapped between 2 dataset, calculate for fixed effect:
+tax_2_split=split(phyloz_cond_2, phyloz_cond_2$taxon)
+tax_srr_split=split(phyloz_cond_srr, phyloz_cond_srr$taxon)
+
+
+
+#==============================APPROACH 2 -- combine result before running phylogenize:
+```
+
