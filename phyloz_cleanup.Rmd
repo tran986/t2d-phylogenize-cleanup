@@ -8,6 +8,8 @@ date: "2025-09-17"
 library(tidyverse)
 library(dplyr)
 library(ashr)
+library(plotly)
+library(ggplot2)
 #------------------------------which approach is better?
 
 #==============================APPROACH 1 -- combine result after running phylogenize:
@@ -34,12 +36,17 @@ phyloz_met_5=read.csv("~/Desktop/phyloz_outs/all-results-t2d-5-met.csv")
 #--without ashr: + make plotly graph
 merge_cond=inner_join(phyloz_cond_2, phyloz_cond_srr, by = c("taxon", "gene")) #!!!11k-12k genes are dropped!!!
 merge_cond_split=split(merge_cond, merge_cond$taxon)
-merge_cond_scatter=lapply(merge_cond_split, function(x) ggplot(x, aes(x = effect.size.x, y = effect.size.y)) +
-  geom_point(color = "blue", size = 3) +
-  labs(title = "effect size",
-       x = "t2d_2",
-       y = "t2d_srr") +
-  theme_minimal())
+merge_cond_scatter <- lapply(names(merge_cond_split), function(name) {
+  df <- merge_cond_split[[name]]
+  p <- ggplot(df, aes(x = effect.size.x, y = effect.size.y, text = gene)) +
+    geom_point(size = 3, color = "blue") +
+    labs(
+      title = paste("Scatterplot for", name),
+      x = "t2d_2",
+      y = "t2d_srr"
+    )
+  ggplotly(p, tooltip = "text")
+})
 
 #--with ashr:
 ashr_merge_after=lapply(list(phyloz_cond_srr,
@@ -58,13 +65,17 @@ colnames(ashSrr_res)[c(1, 2)] <- c("taxon", "gene")
 merge_cond_ash=inner_join(ash2_res, ashSrr_res, by = c("taxon", "gene"))
 merge_cond_ash_split=split(merge_cond_ash, merge_cond_ash$taxon)
 
-merge_cond_scatter_ash=lapply(merge_cond_ash_split, function(t) 
-  ggplot(t, aes(x = PosteriorMean.x, y = PosteriorMean.y)) +
-  geom_point(color = "blue", size = 1.3) +
-  labs(title = "effect size",
-       x = "t2d_2",
-       y = "t2d_srr") +
-  theme_minimal())
+merge_cond_scatter_ash <- lapply(names(merge_cond_ash_split), function(name) {
+  df <- merge_cond_ash_split[[name]]
+  p <- ggplot(df, aes(x = PosteriorMean.x, y = PosteriorMean.y, text = gene)) +
+    geom_point(size = 3, color = "blue") +
+    labs(
+      title = paste("Scatterplot for", name),
+      x = "t2d_2",
+      y = "t2d_srr"
+    )
+  ggplotly(p, tooltip = "text")
+})
 
 #===combine later with fixed effect:
 
