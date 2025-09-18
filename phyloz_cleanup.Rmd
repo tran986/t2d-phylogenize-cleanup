@@ -31,9 +31,8 @@ phyloz_met_5=read.csv("~/Desktop/phyloz_outs/all-results-t2d-5-met.csv")
 
 #===check if they agree:
 #for each taxon, and for genes in those taxon that are overlapped:
-#--without ashr:
+#--without ashr: + make plotly graph
 merge_cond=inner_join(phyloz_cond_2, phyloz_cond_srr, by = c("taxon", "gene")) #!!!11k-12k genes are dropped!!!
-
 merge_cond_split=split(merge_cond, merge_cond$taxon)
 merge_cond_scatter=lapply(merge_cond_split, function(x) ggplot(x, aes(x = effect.size.x, y = effect.size.y)) +
   geom_point(color = "blue", size = 3) +
@@ -43,8 +42,23 @@ merge_cond_scatter=lapply(merge_cond_split, function(x) ggplot(x, aes(x = effect
   theme_minimal())
 
 #--with ashr:
+ashr_merge_after=lapply(list(phyloz_cond_srr,
+            phyloz_cond_2), function(x)
+            ashr::ash.workhorse(x$effect.size,
+                                x$std.err))
+ash_srr=ashr_merge_after[[1]]
+ash_2=ashr_merge_after[[2]]
 
-  
+ash2_res=cbind(phyloz_cond_2$taxon, phyloz_cond_2$gene, ash_2$result) 
+colnames(ash2_res)[c(1, 2)] <- c("taxon", "gene")
+ashSrr_res=cbind(phyloz_cond_srr$taxon, phyloz_cond_srr$gene, ash_srr$result)
+colnames(ashSrr_res)[c(1, 2)] <- c("taxon", "gene")
+
+#make a plot for each gene/per taxon:
+merge_cond_ash=inner_join(ash2_res, ashSrr_res, by = c("taxon", "gene"))
+merge_cond_ash_split=split(merge_cond_ash, merge_cond_ash$taxon)
+
+
 
 #===combine later with fixed effect:
 
