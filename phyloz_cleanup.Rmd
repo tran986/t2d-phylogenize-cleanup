@@ -77,8 +77,29 @@ merge_cond_scatter_ash <- lapply(names(merge_cond_ash_split), function(name) {
   ggplotly(p, tooltip = "text")
 })
 
-#===combine later with fixed effect:
+#===combine with fixed effect:-check the formula again 
+#function defined:
+weight_func=function(ef_s1, ef_s2, std_1, std_2) {
+  effs=(ef_s1*(1/std_1^2) + ef_s2*(1/std_2^2)) / ((1/std_1^2) + (1/std_2^2))
+  var=1/((1/std_1^2)+(1/std_2^2))
+  stder=sqrt(var)
+  return(list("effs"=effs,
+              "stder"=stder))
+}
 
-#==============================APPROACH 2 -- combine result before running phylogenize:
+#before ashr:
+fixed_eff_cond=weight_func(ef_s1 = merge_cond$effect.size.x,
+                           ef_s2 = merge_cond$effect.size.y,
+                           std_1 = merge_cond$std.err.x,
+                           std_2 = merge_cond$std.err.y)
+fix_eff_merge_cond=data.frame(
+  taxon=merge_cond$taxon,
+  gene=merge_cond$gene,
+  effs=fixed_eff_cond[["effs"]],
+  stder=fixed_eff_cond[["stder"]]
+)
+
+
+#==============================APPROACH 2 -- combine result before running phylogenize:-rerun provided phenotype phylogenize:
 ```
 
