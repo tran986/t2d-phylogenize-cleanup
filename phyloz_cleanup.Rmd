@@ -19,9 +19,9 @@ count_5_t2d <- read.delim("~/Desktop/count_5_t2d_new.tab") %>% rename("X"="speci
 count_srr_t2d <- read.delim("~/Desktop/count_srr_t2d.tab") %>% rename("X"="species_id")
 
 #===metadata for each of the dataset:
-md_2_t2d=read.delim("~/Desktop/md_2_t2d.tab")
-md_5_t2d=read.delim("~/Desktop/md_5_t2d_fixed.tab")
-md_srr_t2d=read.delim("~/Desktop/md_srr_t2d.tab")
+md_2_t2d=read.delim("~/Desktop/phyloz_outs/md_2_t2d.tab")
+md_5_t2d=read.delim("~/Desktop/phyloz_outs/md_5_t2d_fixed.tab")
+md_srr_t2d=read.delim("~/Desktop/phyloz_outs/md_srr_t2d.tab")
 
 #===phylogenize outputs for each dataset:
 #---t2d cond:--all-results
@@ -47,7 +47,7 @@ merge_cond_scatter <- lapply(names(merge_cond_split), function(name) {
     )
   ggplotly(p, tooltip = "text")
 })
-
+merge_cond_scatter
 #--with ashr:
 ashr_merge_after=lapply(list(phyloz_cond_srr,
             phyloz_cond_2), function(x)
@@ -101,5 +101,62 @@ fix_eff_merge_cond=data.frame(
 
 
 #==============================APPROACH 2 -- combine result before running phylogenize:-rerun provided phenotype phylogenize:
+
+#apply ancombc first:
+#---t2d_cond:
+md2mtx=md_2_t2d %>% column_to_rownames(var="Sample")
+count2mtx=count_2_t2d %>% column_to_rownames(var="species_id")
+count2mtx <- as.matrix(count2mtx)
+storage.mode(count2mtx) <- "numeric"
+
+ancom_tse_2 <- TreeSummarizedExperiment::TreeSummarizedExperiment(
+  assays=S4Vectors::SimpleList(counts=count2mtx),
+  colData=S4Vectors::DataFrame(md2mtx))
+
+ancom_res_tse2 <- ANCOMBC::ancombc2(ancom_tse_2,
+                                   assay_name="counts",
+                                   fix_formula="condition",
+                                   n_cl=4)
+
+anc_res_2=ancom_res_tse2$res
+
+#---Srr_cond:
+mdSrrmtx=md_srr_t2d %>% column_to_rownames(var="Sample")
+countSrrmtx=count_srr_t2d %>% 
+  select(species_id, md_srr_t2d$Sample) %>%
+  column_to_rownames(var="species_id")
+
+countSrrmtx <- as.matrix(countSrrmtx)
+storage.mode(countSrrmtx) <- "numeric"
+
+ancom_tse_Srr <- TreeSummarizedExperiment::TreeSummarizedExperiment(
+  assays=S4Vectors::SimpleList(counts=countSrrmtx), #assay: 370
+  colData=S4Vectors::DataFrame(mdSrrmtx))           #md: 256
+
+ancom_res_tseSrr <- ANCOMBC::ancombc2(ancom_tse_Srr,
+                                   assay_name="counts", 
+                                   fix_formula="env",
+                                   n_cl=4)
+
+anc_res_srr=ancom_res_tseSrr$res
+
+#merge two df:
+anc_res_merge=inner_join(anc_res_2,anc_res_srr, by=c("taxon"))
+
+#make "provided" phenotype tab file:
+fix_eff_b4=weight_func(
+  anc_res_merge$lfc_conditioncontrol,
+  anc_res_merge$lfc_envcontrol,
+  anc_res_merge$se_conditioncontrol,
+  anc_res_merge$se_envcontrol
+)
+
+phenotype_cond=data.frame(
+  species_id=as.numeric(anc_res_merge$taxon),
+  estimate=fix_eff_b4$effs,
+  stderr=fix_eff_b4$stder)
+
+#==============================WHAT IF THERE WERE NO AGREEMENT at pangenome level:
+
 ```
 
